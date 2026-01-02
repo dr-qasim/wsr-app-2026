@@ -1,0 +1,43 @@
+<UserControl x:Class="VendingService.WPF.Views.ProfileView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="{Binding Title}" FontSize="24" FontWeight="SemiBold" Margin="4,0,0,12"/>
+
+        <Border Grid.Row="1" Background="White" CornerRadius="6" Padding="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Width="72" Height="72" CornerRadius="36" Background="#33404B" VerticalAlignment="Top">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Foreground="White" FontSize="22" FontWeight="SemiBold"
+                               Text="{Binding Initials}"/>
+                </Border>
+
+                <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                    <TextBlock FontSize="18" FontWeight="SemiBold">
+                        <Run Text="{Binding LastName}"/>
+                        <Run Text=" "/>
+                        <Run Text="{Binding FirstName}"/>
+                    </TextBlock>
+                    <TextBlock Margin="0,4,0,0" Foreground="#666" Text="{Binding RoleName}"/>
+                    <TextBlock Margin="0,2,0,0" Foreground="#666" Text="{Binding Email}"/>
+
+                    <Border Margin="0,16,0,0" Background="#F7F7F7" CornerRadius="6" Padding="12">
+                        <TextBlock Foreground="#666" TextWrapping="Wrap"
+                                   Text="Фото и расширенный профиль добавим следующим шагом (понадобится экран управления пользователями)."/>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
+
