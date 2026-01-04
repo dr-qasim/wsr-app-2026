@@ -12,6 +12,7 @@ public sealed class VendingServiceDbContext(DbContextOptions<VendingServiceDbCon
     public DbSet<EquipmentType> EquipmentTypes => Set<EquipmentType>();
     public DbSet<EventSeverity> EventSeverities => Set<EventSeverity>();
     public DbSet<EventType> EventTypes => Set<EventType>();
+    public DbSet<Maintenance> Maintenances => Set<Maintenance>();
     public DbSet<Modem> Modems => Set<Modem>();
     public DbSet<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>();
     public DbSet<PaymentSystem> PaymentSystems => Set<PaymentSystem>();
@@ -29,6 +30,7 @@ public sealed class VendingServiceDbContext(DbContextOptions<VendingServiceDbCon
     public DbSet<VendingMachineEvent> VendingMachineEvents => Set<VendingMachineEvent>();
     public DbSet<VendingMachineManufacturer> VendingMachineManufacturers => Set<VendingMachineManufacturer>();
     public DbSet<VendingMachineModel> VendingMachineModels => Set<VendingMachineModel>();
+    public DbSet<VendingMachineProduct> VendingMachineProducts => Set<VendingMachineProduct>();
     public DbSet<VendingMachinePaymentSystem> VendingMachinePaymentSystems => Set<VendingMachinePaymentSystem>();
     public DbSet<VendingMachineStatus> VendingMachineStatuses => Set<VendingMachineStatus>();
     public DbSet<WorkMode> WorkModes => Set<WorkMode>();
@@ -315,6 +317,21 @@ public sealed class VendingServiceDbContext(DbContextOptions<VendingServiceDbCon
             entity.HasIndex(x => x.Name).IsUnique();
         });
 
+        modelBuilder.Entity<VendingMachineProduct>(entity =>
+        {
+            entity.ToTable("VendingMachineProduct");
+            entity.HasKey(x => new { x.VendingMachineId, x.ProductId });
+            entity.Property(x => x.AverageDailySales).HasPrecision(10, 2);
+
+            entity.HasOne(x => x.VendingMachine)
+                .WithMany()
+                .HasForeignKey(x => x.VendingMachineId);
+
+            entity.HasOne(x => x.Product)
+                .WithMany()
+                .HasForeignKey(x => x.ProductId);
+        });
+
         modelBuilder.Entity<SalePaymentMethod>(entity =>
         {
             entity.ToTable("SalePaymentMethod");
@@ -396,6 +413,22 @@ public sealed class VendingServiceDbContext(DbContextOptions<VendingServiceDbCon
             entity.HasOne(x => x.EventType)
                 .WithMany()
                 .HasForeignKey(x => x.EventTypeId);
+        });
+
+        modelBuilder.Entity<Maintenance>(entity =>
+        {
+            entity.ToTable("Maintenance");
+            entity.HasKey(x => x.MaintenanceId);
+            entity.Property(x => x.WorkDescription).HasMaxLength(1000);
+            entity.Property(x => x.Problems).HasMaxLength(1000);
+
+            entity.HasOne(x => x.VendingMachine)
+                .WithMany()
+                .HasForeignKey(x => x.VendingMachineId);
+
+            entity.HasOne(x => x.ExecutorUserAccount)
+                .WithMany()
+                .HasForeignKey(x => x.ExecutorUserAccountId);
         });
     }
 }
