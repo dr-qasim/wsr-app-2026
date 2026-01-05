@@ -298,28 +298,28 @@ public sealed class SalesDynamicsTileViewModel : DashboardTileViewModel
         };
 
         var labels = sales.Select(x => x.Date.ToString("dd.MM")).ToList();
+        var values = sales
+            .Select(x => mode == SalesDynamicsMode.Amount ? (double)x.TotalAmount : x.TotalQuantity)
+            .ToList();
+        var maxValue = values.Count == 0 ? 0 : values.Max();
 
-        var xAxis = new LinearAxis
+        var xAxis = new CategoryAxis
         {
             Position = AxisPosition.Bottom,
-            Minimum = -0.5,
-            Maximum = Math.Max(-0.5, labels.Count - 0.5),
-            MajorStep = 1,
-            MinorStep = 1,
             FontSize = 10,
             IsPanEnabled = false,
-            IsZoomEnabled = false,
-            LabelFormatter = value =>
-            {
-                var index = (int)Math.Round(value);
-                return index >= 0 && index < labels.Count ? labels[index] : string.Empty;
-            }
+            IsZoomEnabled = false
         };
+        foreach (var label in labels)
+        {
+            xAxis.Labels.Add(label);
+        }
 
         var yAxis = new LinearAxis
         {
             Position = AxisPosition.Left,
             Minimum = 0,
+            Maximum = maxValue <= 0 ? 1 : Math.Ceiling(maxValue * 1.1),
             MajorGridlineStyle = LineStyle.Solid,
             MinorGridlineStyle = LineStyle.None,
             MajorGridlineColor = OxyColor.Parse("#E5E7EB")
@@ -328,17 +328,18 @@ public sealed class SalesDynamicsTileViewModel : DashboardTileViewModel
         model.Axes.Add(xAxis);
         model.Axes.Add(yAxis);
 
-        var series = new RectangleBarSeries
+        var series = new LineSeries
         {
-            FillColor = OxyColor.Parse("#93C5FD"),
-            StrokeThickness = 0
+            Color = OxyColor.Parse("#3B82F6"),
+            StrokeThickness = 2,
+            MarkerType = MarkerType.Circle,
+            MarkerSize = 3,
+            MarkerFill = OxyColor.Parse("#93C5FD")
         };
 
-        for (var i = 0; i < sales.Count; i++)
+        for (var i = 0; i < values.Count; i++)
         {
-            var s = sales[i];
-            var value = mode == SalesDynamicsMode.Amount ? (double)s.TotalAmount : s.TotalQuantity;
-            series.Items.Add(new RectangleBarItem(i - 0.4, 0, i + 0.4, value));
+            series.Points.Add(new DataPoint(i, values[i]));
         }
 
         model.Series.Add(series);

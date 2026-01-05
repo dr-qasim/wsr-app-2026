@@ -17,112 +17,225 @@
         </DockPanel>
 
         <Border Grid.Row="1" Background="White" CornerRadius="6" Padding="12" Margin="0,0,0,12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+            <DockPanel LastChildFill="True">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Margin="0,0,10,0" Text="Показать"/>
+                    <ComboBox Width="80"
+                              ItemsSource="{Binding PageSizes}"
+                              SelectedItem="{Binding PageSize}"/>
 
-                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0" Text="Показать"/>
-                <ComboBox Grid.Column="1" Width="80"
-                          ItemsSource="{Binding PageSizes}"
-                          SelectedItem="{Binding PageSize}"/>
-
-                <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <TextBox Width="240" Height="30" Margin="16,0,8,0"
                              Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"/>
                     <Button Width="100" Height="30" Content="Найти" Command="{Binding SearchCommand}"/>
                 </StackPanel>
 
-                <Button Grid.Column="3" Width="120" Height="30" Margin="12,0,8,0"
-                        Content="Добавить" Click="AddButton_OnClick"/>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
+                        <ToggleButton Width="90" Height="30"
+                                      IsChecked="{Binding IsTableView}">
+                            <TextBlock Text="Таблица"/>
+                        </ToggleButton>
+                        <ToggleButton Width="90" Height="30" Margin="6,0,0,0"
+                                      IsChecked="{Binding IsTileView}">
+                            <TextBlock Text="Плитка"/>
+                        </ToggleButton>
+                    </StackPanel>
 
-                <Button Grid.Column="4" Width="120" Height="30" Content="Экспорт" Click="ExportButton_OnClick">
-                    <Button.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="CSV" Click="ExportCsv_OnClick"/>
-                            <MenuItem Header="HTML" Click="ExportHtml_OnClick"/>
-                            <MenuItem Header="PDF" Click="ExportPdf_OnClick"/>
-                        </ContextMenu>
-                    </Button.ContextMenu>
-                </Button>
-            </Grid>
+                    <CheckBox VerticalAlignment="Center" Margin="0,0,12,0"
+                              Content="Группировать по компании"
+                              IsChecked="{Binding IsGroupedByCompany}"/>
+
+                    <Button Width="120" Height="30" Margin="0,0,8,0"
+                            Content="Добавить" Click="AddButton_OnClick"/>
+
+                    <Button Width="120" Height="30" Content="Экспорт" Click="ExportButton_OnClick">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="CSV" Click="ExportCsv_OnClick"/>
+                                <MenuItem Header="HTML" Click="ExportHtml_OnClick"/>
+                                <MenuItem Header="PDF" Click="ExportPdf_OnClick"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
         </Border>
 
         <Border Grid.Row="2" Background="White" CornerRadius="6" Padding="12">
-            <DataGrid ItemsSource="{Binding Items}"
-                      AutoGenerateColumns="False"
-                      CanUserAddRows="False"
-                      IsReadOnly="True"
-                      AlternationCount="2"
-                      AlternatingRowBackground="#F7F7F7"
-                      HeadersVisibility="Column"
-                      GridLinesVisibility="None">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding VendingMachineId}" Width="80"/>
-                    <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
-                    <DataGridTemplateColumn Header="Модель" Width="220">
-                        <DataGridTemplateColumn.CellTemplate>
+            <Grid>
+                <DataGrid ItemsSource="{Binding ItemsView}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          IsReadOnly="True"
+                          AlternationCount="2"
+                          AlternatingRowBackground="#F7F7F7"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="None"
+                          Visibility="{Binding IsTableView, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <DataGrid.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.ContainerStyle>
+                                <Style TargetType="{x:Type GroupItem}">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="{x:Type GroupItem}">
+                                                <Expander IsExpanded="True" Margin="0,6,0,6">
+                                                    <Expander.Header>
+                                                        <TextBlock FontWeight="SemiBold">
+                                                            <Run Text="Компания: "/>
+                                                            <Run Text="{Binding Name}"/>
+                                                            <Run Text=" ("/>
+                                                            <Run Text="{Binding ItemCount}"/>
+                                                            <Run Text=")"/>
+                                                        </TextBlock>
+                                                    </Expander.Header>
+                                                    <ItemsPresenter/>
+                                                </Expander>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </GroupStyle.ContainerStyle>
+                        </GroupStyle>
+                    </DataGrid.GroupStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding VendingMachineId}" Width="80"/>
+                        <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
+                        <DataGridTemplateColumn Header="Модель" Width="220">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <TextBlock.Inlines>
+                                            <Run Text="{Binding ManufacturerName}"/>
+                                            <Run Text=" "/>
+                                            <Run Text="{Binding ModelName}"/>
+                                        </TextBlock.Inlines>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Компания" Width="220" Binding="{Binding CompanyName}"/>
+                        <DataGridTemplateColumn Header="Модем" Width="140">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="{Binding ModemNumber}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ModemId}" Value="-1">
+                                                        <Setter Property="Text" Value="-1"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Адрес/Место" Width="260">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <TextBlock.Inlines>
+                                            <Run Text="{Binding Address}"/>
+                                            <Run Text=", "/>
+                                            <Run Text="{Binding Place}"/>
+                                        </TextBlock.Inlines>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="В работе с" Width="120" Binding="{Binding CommissioningDate}"/>
+                        <DataGridTemplateColumn Header="Действия" Width="140">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Width="32" Height="26" Margin="0,0,6,0" Content="E" Click="EditButton_OnClick"/>
+                                        <Button Width="32" Height="26" Margin="0,0,6,0" Content="M" Click="DetachButton_OnClick"/>
+                                        <Button Width="32" Height="26" Content="X" Click="DeleteButton_OnClick"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              Visibility="{Binding IsTileView, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <ItemsControl ItemsSource="{Binding ItemsView}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.ContainerStyle>
+                                    <Style TargetType="{x:Type GroupItem}">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="{x:Type GroupItem}">
+                                                    <StackPanel Margin="0,6,0,12">
+                                                        <TextBlock FontWeight="SemiBold" Margin="2,0,0,6">
+                                                            <Run Text="Компания: "/>
+                                                            <Run Text="{Binding Name}"/>
+                                                            <Run Text=" ("/>
+                                                            <Run Text="{Binding ItemCount}"/>
+                                                            <Run Text=")"/>
+                                                        </TextBlock>
+                                                        <ItemsPresenter/>
+                                                    </StackPanel>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </GroupStyle.ContainerStyle>
+                            </GroupStyle>
+                        </ItemsControl.GroupStyle>
+
+                        <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock>
-                                    <TextBlock.Inlines>
-                                        <Run Text="{Binding ManufacturerName}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding ModelName}"/>
-                                    </TextBlock.Inlines>
-                                </TextBlock>
+                                <Border Width="300" Margin="6" Padding="12" CornerRadius="6" Background="#F7F7F7">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}"/>
+                                        <TextBlock Margin="0,4,0,0" Foreground="#666">
+                                            <Run Text="{Binding ManufacturerName}"/>
+                                            <Run Text=" "/>
+                                            <Run Text="{Binding ModelName}"/>
+                                        </TextBlock>
+                                        <TextBlock Foreground="#666" Text="{Binding CompanyName}"/>
+                                        <TextBlock Foreground="#666">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="{Binding ModemNumber, StringFormat=Модем: {0}}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ModemId}" Value="-1">
+                                                            <Setter Property="Text" Value="Модем: -1"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Margin="0,4,0,0" Foreground="#666" TextWrapping="Wrap">
+                                            <Run Text="{Binding Address}"/>
+                                            <Run Text=", "/>
+                                            <Run Text="{Binding Place}"/>
+                                        </TextBlock>
+
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                                            <Button Width="28" Height="24" Margin="0,0,6,0" Content="E" Click="EditButton_OnClick"/>
+                                            <Button Width="28" Height="24" Margin="0,0,6,0" Content="M" Click="DetachButton_OnClick"/>
+                                            <Button Width="28" Height="24" Content="X" Click="DeleteButton_OnClick"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
                             </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Компания" Width="220" Binding="{Binding CompanyName}"/>
-                    <DataGridTemplateColumn Header="Модем" Width="140">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock>
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value="{Binding ModemNumber}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ModemId}" Value="-1">
-                                                    <Setter Property="Text" Value="-1"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="Адрес/Место" Width="260">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock>
-                                    <TextBlock.Inlines>
-                                        <Run Text="{Binding Address}"/>
-                                        <Run Text=", "/>
-                                        <Run Text="{Binding Place}"/>
-                                    </TextBlock.Inlines>
-                                </TextBlock>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="В работе с" Width="120" Binding="{Binding CommissioningDate}"/>
-                    <DataGridTemplateColumn Header="Действия" Width="140">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <Button Width="32" Height="26" Margin="0,0,6,0" Content="✏" Click="EditButton_OnClick"/>
-                                    <Button Width="32" Height="26" Margin="0,0,6,0" Content="⛓" Click="DetachButton_OnClick"/>
-                                    <Button Width="32" Height="26" Content="🗑" Click="DeleteButton_OnClick"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-            </DataGrid>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
         </Border>
 
         <DockPanel Grid.Row="3" Margin="0,12,0,0">

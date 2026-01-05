@@ -1,8 +1,12 @@
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using VendingService.WPF.Contracts.VendingMachines;
 using VendingService.WPF.ViewModels;
 
@@ -205,7 +209,89 @@ public partial class VendingMachinesView : UserControl
 
     private void ExportPdf_OnClick(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show("PDF экспорт добавим на следующем шаге (можно через небольшую библиотеку для генерации PDF).", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+        if (DataContext is not VendingMachinesViewModel vm)
+        {
+            return;
+        }
+
+        var dlg = new SaveFileDialog
+        {
+            Filter = "PDF (*.pdf)|*.pdf",
+            FileName = "VendingMachines.pdf"
+        };
+
+        if (dlg.ShowDialog() != true)
+        {
+            return;
+        }
+
+        QuestPDF.Settings.License = LicenseType.Community;
+
+        var data = vm.Items.ToList();
+
+        Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4.Landscape());
+                    page.Margin(20);
+                    page.DefaultTextStyle(x => x.FontSize(10));
+
+                    page.Header()
+                        .Text("Торговые автоматы")
+                        .FontSize(16)
+                        .SemiBold();
+
+                    page.Content().PaddingTop(10).Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.ConstantColumn(40);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(1);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Element(HeaderCell).Text("ID");
+                            header.Cell().Element(HeaderCell).Text("Название");
+                            header.Cell().Element(HeaderCell).Text("Модель");
+                            header.Cell().Element(HeaderCell).Text("Компания");
+                            header.Cell().Element(HeaderCell).Text("Модем");
+                            header.Cell().Element(HeaderCell).Text("Адрес");
+                            header.Cell().Element(HeaderCell).Text("Место");
+                            header.Cell().Element(HeaderCell).Text("В работе с");
+                        });
+
+                        foreach (var x in data)
+                        {
+                            var modem = x.ModemId == -1 ? "-1" : (x.ModemNumber ?? "");
+                            table.Cell().Element(BodyCell).Text(x.VendingMachineId.ToString());
+                            table.Cell().Element(BodyCell).Text(x.Name);
+                            table.Cell().Element(BodyCell).Text($"{x.ManufacturerName} {x.ModelName}");
+                            table.Cell().Element(BodyCell).Text(x.CompanyName ?? "");
+                            table.Cell().Element(BodyCell).Text(modem);
+                            table.Cell().Element(BodyCell).Text(x.Address);
+                            table.Cell().Element(BodyCell).Text(x.Place);
+                            table.Cell().Element(BodyCell).Text(x.CommissioningDate.ToString("yyyy-MM-dd"));
+                        }
+                    });
+                });
+            })
+            .GeneratePdf(dlg.FileName);
+
+        MessageBox.Show("Экспорт PDF выполнен.", "Готово", MessageBoxButton.OK, MessageBoxImage.Information);
+
+        static IContainer HeaderCell(IContainer container)
+            => container.Background(Colors.Grey.Lighten3).Padding(4).Border(1).BorderColor(Colors.Grey.Lighten1);
+
+        static IContainer BodyCell(IContainer container)
+            => container.Padding(4).BorderBottom(1).BorderColor(Colors.Grey.Lighten3);
     }
 
     private static string EscapeCsv(string value)

@@ -25,11 +25,14 @@
         <DataTemplate DataType="{x:Type vm:MonitorViewModel}">
             <views:MonitorView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UsersViewModel}">
+            <views:UsersView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ModemsViewModel}">
+            <views:ModemsView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ProfileViewModel}">
             <views:ProfileView/>
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:SessionsViewModel}">
-            <views:SessionsView/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:TextPageViewModel}">
             <views:TextPageView/>
@@ -238,7 +241,6 @@
                             </MenuItem.Header>
 
                             <MenuItem Header="Мой профиль" Command="{Binding NavigateProfileCommand}"/>
-                            <MenuItem Header="Мои сессии" Command="{Binding NavigateSessionsCommand}"/>
                             <Separator/>
                             <MenuItem Header="Выход" Command="{Binding LogoutCommand}"/>
                         </MenuItem>

@@ -1,15 +1,12 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Globalization;
 using System.Windows;
-using System.Windows.Data;
 using VendingService.WPF.Contracts.Common;
-using VendingService.WPF.Contracts.VendingMachines;
+using VendingService.WPF.Contracts.Users;
 using VendingService.WPF.Services.Api;
 
 namespace VendingService.WPF.ViewModels;
 
-public sealed class VendingMachinesViewModel : ObservableObject
+public sealed class UsersViewModel : ObservableObject
 {
     private readonly ApiClient _apiClient;
 
@@ -18,11 +15,8 @@ public sealed class VendingMachinesViewModel : ObservableObject
     private int _page = 1;
     private int _pageSize = 50;
     private int _totalCount;
-    private bool _isTileView;
-    private bool _isGroupedByCompany;
 
-    public ObservableCollection<VendingMachineListItem> Items { get; } = new();
-    public ICollectionView ItemsView { get; }
+    public ObservableCollection<UserListItem> Items { get; } = new();
 
     public IReadOnlyList<int> PageSizes { get; } = [10, 20, 50, 100];
 
@@ -91,39 +85,6 @@ public sealed class VendingMachinesViewModel : ObservableObject
         }
     }
 
-    public bool IsTileView
-    {
-        get => _isTileView;
-        set
-        {
-            if (SetProperty(ref _isTileView, value))
-            {
-                RaisePropertyChanged(nameof(IsTableView));
-            }
-        }
-    }
-
-    public bool IsTableView
-    {
-        get => !IsTileView;
-        set
-        {
-            IsTileView = !value;
-        }
-    }
-
-    public bool IsGroupedByCompany
-    {
-        get => _isGroupedByCompany;
-        set
-        {
-            if (SetProperty(ref _isGroupedByCompany, value))
-            {
-                ApplyGrouping();
-            }
-        }
-    }
-
     public bool CanGoPrev => Page > 1;
     public bool CanGoNext => Page * PageSize < TotalCount;
 
@@ -146,13 +107,10 @@ public sealed class VendingMachinesViewModel : ObservableObject
     public AsyncRelayCommand SearchCommand { get; }
     public AsyncRelayCommand NextPageCommand { get; }
     public AsyncRelayCommand PrevPageCommand { get; }
-    public AsyncRelayCommand<int> DeleteCommand { get; }
-    public AsyncRelayCommand<int> DetachModemCommand { get; }
 
-    public VendingMachinesViewModel()
+    public UsersViewModel()
     {
         _apiClient = ((App)Application.Current).Services.ApiClient;
-        ItemsView = CollectionViewSource.GetDefaultView(Items);
 
         LoadCommand = new AsyncRelayCommand(LoadAsync, () => !IsLoading);
         SearchCommand = new AsyncRelayCommand(() =>
@@ -172,9 +130,6 @@ public sealed class VendingMachinesViewModel : ObservableObject
             Page -= 1;
             await LoadAsync();
         }, () => !IsLoading && CanGoPrev);
-
-        DeleteCommand = new AsyncRelayCommand<int>(DeleteAsync, _ => !IsLoading);
-        DetachModemCommand = new AsyncRelayCommand<int>(DetachModemAsync, _ => !IsLoading);
     }
 
     public async Task LoadAsync()
@@ -183,7 +138,7 @@ public sealed class VendingMachinesViewModel : ObservableObject
 
         try
         {
-            var result = await _apiClient.GetVendingMachinesAsync(Search, Page, PageSize);
+            var result = await _apiClient.GetUsersAsync(Search, Page, PageSize);
             ApplyResult(result);
         }
         catch (ApiException ex)
@@ -196,7 +151,7 @@ public sealed class VendingMachinesViewModel : ObservableObject
         }
     }
 
-    private void ApplyResult(PagedResult<VendingMachineListItem> result)
+    private void ApplyResult(PagedResult<UserListItem> result)
     {
         Items.Clear();
         foreach (var item in result.Items)
@@ -215,78 +170,5 @@ public sealed class VendingMachinesViewModel : ObservableObject
         RaisePropertyChanged(nameof(CanGoNext));
         NextPageCommand.RaiseCanExecuteChanged();
         PrevPageCommand.RaiseCanExecuteChanged();
-    }
-
-    private void ApplyGrouping()
-    {
-        using var _ = ItemsView.DeferRefresh();
-        ItemsView.GroupDescriptions.Clear();
-
-        if (IsGroupedByCompany)
-        {
-            ItemsView.GroupDescriptions.Add(new PropertyGroupDescription(
-                nameof(VendingMachineListItem.CompanyName),
-                new CompanyGroupConverter()));
-        }
-    }
-
-    private sealed class CompanyGroupConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            var name = value as string;
-            return string.IsNullOrWhiteSpace(name) ? "Без компании" : name;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-            => Binding.DoNothing;
-    }
-
-    private async Task DeleteAsync(int vendingMachineId)
-    {
-        var result = MessageBox.Show(
-            $"Удалить торговый автомат #{vendingMachineId}?",
-            "Подтверждение",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-
-        if (result != MessageBoxResult.Yes)
-        {
-            return;
-        }
-
-        try
-        {
-            await _apiClient.DeleteVendingMachineAsync(vendingMachineId);
-            await LoadAsync();
-        }
-        catch (ApiException ex)
-        {
-            MessageBox.Show(ex.Message, "Ошибка API", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    private async Task DetachModemAsync(int vendingMachineId)
-    {
-        var result = MessageBox.Show(
-            $"Отвязать модем от торгового автомата #{vendingMachineId}?\n\nПосле отвязки модем будет отображаться как -1.",
-            "Подтверждение",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
-
-        if (result != MessageBoxResult.Yes)
-        {
-            return;
-        }
-
-        try
-        {
-            await _apiClient.DetachVendingMachineModemAsync(vendingMachineId);
-            await LoadAsync();
-        }
-        catch (ApiException ex)
-        {
-            MessageBox.Show(ex.Message, "Ошибка API", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
     }
 }

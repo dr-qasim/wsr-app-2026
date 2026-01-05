@@ -8,7 +8,9 @@ using VendingService.WPF.Contracts.Companies;
 using VendingService.WPF.Contracts.Common;
 using VendingService.WPF.Contracts.Dashboard;
 using VendingService.WPF.Contracts.Lookups;
+using VendingService.WPF.Contracts.Modems;
 using VendingService.WPF.Contracts.Monitor;
+using VendingService.WPF.Contracts.Users;
 using VendingService.WPF.Contracts.VendingMachines;
 
 namespace VendingService.WPF.Services.Api;
@@ -147,6 +149,38 @@ public sealed class ApiClient(HttpClient httpClient)
     {
         var response = await httpClient.GetAsync($"/monitor/snapshot?afterEventId={afterEventId}", cancellationToken);
         return await ReadJsonOrThrow<MonitorSnapshotResponse>(response, cancellationToken);
+    }
+
+    public async Task<PagedResult<UserListItem>> GetUsersAsync(
+        string? search,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var url = $"/users?page={page}&pageSize={pageSize}";
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            url += $"&search={Uri.EscapeDataString(search.Trim())}";
+        }
+
+        var response = await httpClient.GetAsync(url, cancellationToken);
+        return await ReadJsonOrThrow<PagedResult<UserListItem>>(response, cancellationToken);
+    }
+
+    public async Task<PagedResult<ModemListItem>> GetModemsAsync(
+        string? search,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var url = $"/modems?page={page}&pageSize={pageSize}";
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            url += $"&search={Uri.EscapeDataString(search.Trim())}";
+        }
+
+        var response = await httpClient.GetAsync(url, cancellationToken);
+        return await ReadJsonOrThrow<PagedResult<ModemListItem>>(response, cancellationToken);
     }
 
     public async Task<DashboardOverviewResponse> GetDashboardOverviewAsync(CancellationToken cancellationToken = default)

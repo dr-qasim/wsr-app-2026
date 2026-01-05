@@ -1,4 +1,4 @@
-using System.Windows;
+using VendingService.WPF.Services.Auth;
 
 namespace VendingService.WPF.ViewModels;
 
@@ -12,9 +12,12 @@ public sealed class ProfileViewModel : ObservableObject
     public string? RoleName { get; }
     public string Initials { get; }
 
-    public ProfileViewModel()
+    public ProfileViewModel(AuthState state)
     {
-        var state = ((App)Application.Current).Services.AuthState;
+        if (state is null)
+        {
+            throw new ArgumentNullException(nameof(state));
+        }
 
         LastName = state.LastName;
         FirstName = state.FirstName;
@@ -50,4 +53,3 @@ public sealed class ProfileViewModel : ObservableObject
         return prefix[..1].ToUpperInvariant();
     }
 }
-

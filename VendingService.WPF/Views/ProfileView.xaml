@@ -7,7 +7,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="{Binding Title}" FontSize="24" FontWeight="SemiBold" Margin="4,0,0,12"/>
+        <TextBlock Grid.Row="0" Text="{Binding Title, Mode=OneWay}" FontSize="24" FontWeight="SemiBold" Margin="4,0,0,12"/>
 
         <Border Grid.Row="1" Background="White" CornerRadius="6" Padding="16">
             <Grid>
@@ -19,17 +19,17 @@
                 <Border Width="72" Height="72" CornerRadius="36" Background="#33404B" VerticalAlignment="Top">
                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
                                Foreground="White" FontSize="22" FontWeight="SemiBold"
-                               Text="{Binding Initials}"/>
+                               Text="{Binding Initials, Mode=OneWay}"/>
                 </Border>
 
                 <StackPanel Grid.Column="1" Margin="16,0,0,0">
                     <TextBlock FontSize="18" FontWeight="SemiBold">
-                        <Run Text="{Binding LastName}"/>
+                        <Run Text="{Binding LastName, Mode=OneWay}"/>
                         <Run Text=" "/>
-                        <Run Text="{Binding FirstName}"/>
+                        <Run Text="{Binding FirstName, Mode=OneWay}"/>
                     </TextBlock>
-                    <TextBlock Margin="0,4,0,0" Foreground="#666" Text="{Binding RoleName}"/>
-                    <TextBlock Margin="0,2,0,0" Foreground="#666" Text="{Binding Email}"/>
+                    <TextBlock Margin="0,4,0,0" Foreground="#666" Text="{Binding RoleName, Mode=OneWay}"/>
+                    <TextBlock Margin="0,2,0,0" Foreground="#666" Text="{Binding Email, Mode=OneWay}"/>
 
                     <Border Margin="0,16,0,0" Background="#F7F7F7" CornerRadius="6" Padding="12">
                         <TextBlock Foreground="#666" TextWrapping="Wrap"
@@ -40,4 +40,3 @@
         </Border>
     </Grid>
 </UserControl>
-

@@ -37,7 +37,6 @@ public sealed class ShellViewModel : ObservableObject
     public RelayCommand NavigateModemsCommand { get; }
     public RelayCommand NavigateAdditionalCommand { get; }
     public RelayCommand NavigateProfileCommand { get; }
-    public RelayCommand NavigateSessionsCommand { get; }
     public AsyncRelayCommand LogoutCommand { get; }
 
     public ShellViewModel()
@@ -58,11 +57,10 @@ public sealed class ShellViewModel : ObservableObject
         NavigateMonitorCommand = new RelayCommand(() => CurrentPage = new MonitorViewModel());
         NavigateReportsCommand = new RelayCommand(() => CurrentPage = new TextPageViewModel("Детальные отчеты", "Экран детальных отчетов добавим следующим шагом."));
         NavigateInventoryCommand = new RelayCommand(() => CurrentPage = new TextPageViewModel("Учет ТМЦ", "Экран учета ТМЦ добавим следующим шагом."));
-        NavigateUsersCommand = new RelayCommand(() => CurrentPage = new TextPageViewModel("Пользователи", "Экран пользователей добавим следующим шагом."));
-        NavigateModemsCommand = new RelayCommand(() => CurrentPage = new TextPageViewModel("Модемы", "Экран модемов добавим следующим шагом."));
+        NavigateUsersCommand = new RelayCommand(() => CurrentPage = new UsersViewModel());
+        NavigateModemsCommand = new RelayCommand(() => CurrentPage = new ModemsViewModel());
         NavigateAdditionalCommand = new RelayCommand(() => CurrentPage = new TextPageViewModel("Дополнительные", "Экран дополнительных настроек добавим следующим шагом."));
-        NavigateProfileCommand = new RelayCommand(() => CurrentPage = new ProfileViewModel());
-        NavigateSessionsCommand = new RelayCommand(() => CurrentPage = new SessionsViewModel());
+        NavigateProfileCommand = new RelayCommand(() => CurrentPage = new ProfileViewModel(state));
 
         LogoutCommand = new AsyncRelayCommand(async () =>
         {
