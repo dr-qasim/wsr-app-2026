@@ -10,7 +10,9 @@ using VendingService.WPF.Contracts.Dashboard;
 using VendingService.WPF.Contracts.Lookups;
 using VendingService.WPF.Contracts.Modems;
 using VendingService.WPF.Contracts.Monitor;
+using VendingService.WPF.Contracts.Sales;
 using VendingService.WPF.Contracts.Users;
+using VendingService.WPF.Contracts.VendingMachineProducts;
 using VendingService.WPF.Contracts.VendingMachines;
 
 namespace VendingService.WPF.Services.Api;
@@ -187,6 +189,24 @@ public sealed class ApiClient(HttpClient httpClient)
     {
         var response = await httpClient.GetAsync("/dashboard/overview", cancellationToken);
         return await ReadJsonOrThrow<DashboardOverviewResponse>(response, cancellationToken);
+    }
+
+    public async Task<PagedResult<SaleListItem>> GetSalesAsync(
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var url = $"/sales?page={page}&pageSize={pageSize}";
+        var response = await httpClient.GetAsync(url, cancellationToken);
+        return await ReadJsonOrThrow<PagedResult<SaleListItem>>(response, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<VendingMachineProductItem>> GetVendingMachineProductsAsync(
+        int vendingMachineId,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync($"/vending-machines/{vendingMachineId}/products", cancellationToken);
+        return await ReadJsonOrThrow<IReadOnlyList<VendingMachineProductItem>>(response, cancellationToken);
     }
 
     private static async Task<T> ReadJsonOrThrow<T>(HttpResponseMessage response, CancellationToken cancellationToken)

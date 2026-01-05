@@ -870,6 +870,7 @@ GO
 
 MERGE dbo.ServiceRequestStatus AS target
 USING (VALUES
+    (N'Авария', 5),
     (N'Новая', 10),
     (N'В работе', 20),
     (N'Отменена', 30),

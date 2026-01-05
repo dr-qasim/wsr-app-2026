@@ -2,6 +2,7 @@ using System.IO;
 using System.Net.Http;
 using VendingService.WPF.Services.Api;
 using VendingService.WPF.Services.Auth;
+using VendingService.WPF.Services.Notifications;
 using VendingService.WPF.Services.Toasts;
 
 namespace VendingService.WPF.Services;
@@ -14,6 +15,7 @@ public sealed class AppServices
     public AuthState AuthState { get; }
     public AuthService AuthService { get; }
     public ToastService ToastService { get; }
+    public NotificationsClient NotificationsClient { get; }
 
     public AppServices()
     {
@@ -30,5 +32,6 @@ public sealed class AppServices
         AuthState = new AuthState();
         AuthService = new AuthService(ApiClient, AuthState);
         ToastService = new ToastService();
+        NotificationsClient = new NotificationsClient(Settings, AuthState, ToastService);
     }
 }

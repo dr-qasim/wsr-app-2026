@@ -1,0 +1,175 @@
+@page "/web/work-schedule"
+@model VendingService.API.Pages.Web.WorkScheduleModel
+
+<div class="card">
+    <h2>@WebText.ScheduleTitle</h2>
+    <form method="get">
+        <label>
+            @(Model.IsEnglish ? "View" : "Режим"):
+            <select name="ViewMode">
+                <option value="day" selected="@(Model.View == WorkScheduleViewMode.Day)">@((Model.IsEnglish ? "Day" : "День"))</option>
+                <option value="week" selected="@(Model.View == WorkScheduleViewMode.Week)">@WebText.ViewWeek</option>
+            </select>
+        </label>
+        <label style="margin-left: 12px;">
+            @(Model.IsEnglish ? "Date" : "Дата"):
+            <input type="date" name="Date" value="@Model.ReferenceDate.ToString("yyyy-MM-dd")"/>
+        </label>
+        <label style="margin-left: 12px;">
+            @(Model.IsEnglish ? "Employee" : "Сотрудник"):
+            <select name="UserId">
+                <option value="">@(Model.IsEnglish ? "All" : "Все")</option>
+                @foreach (var emp in Model.FilterEmployees)
+                {
+                    <option value="@emp.Id" selected="@(emp.Id == Model.SelectedUserId)">@emp.Name</option>
+                }
+            </select>
+        </label>
+        <button type="submit" class="btn" style="margin-left: 12px;">@WebText.Apply</button>
+    </form>
+
+    <form method="post" asp-page-handler="Generate" style="margin-top: 10px;">
+        <input type="hidden" name="ViewMode" value="@Model.ViewString"/>
+        <input type="hidden" name="Date" value="@Model.ReferenceDate.ToString("yyyy-MM-dd")"/>
+        <button type="submit" class="btn secondary">@((Model.IsEnglish ? "Generate requests" : "Сформировать заявки"))</button>
+    </form>
+
+    <form method="post" asp-page-handler="AutoAssign" style="margin-top: 8px;">
+        <input type="hidden" name="ViewMode" value="@Model.ViewString"/>
+        <input type="hidden" name="Date" value="@Model.ReferenceDate.ToString("yyyy-MM-dd")"/>
+        <button type="submit" class="btn">@WebText.AutoAssign</button>
+    </form>
+
+    <form method="post" asp-page-handler="Apply" style="margin-top: 8px;">
+        <input type="hidden" name="Date" value="@Model.ReferenceDate.ToString("yyyy-MM-dd")"/>
+        <button type="submit" class="btn">@WebText.Generate</button>
+    </form>
+</div>
+
+@if (Model.Messages.Count > 0)
+{
+    <div class="success">@string.Join(" ", Model.Messages)</div>
+}
+
+@if (Model.Warnings.Count > 0)
+{
+    <div class="warning">
+        <strong>@(Model.IsEnglish ? "Warnings:" : "Предупреждения:")</strong>
+        <ul>
+            @foreach (var warn in Model.Warnings)
+            {
+                <li>@warn</li>
+            }
+        </ul>
+    </div>
+}
+
+@Html.AntiForgeryToken()
+
+@if (Model.View == WorkScheduleViewMode.Day)
+{
+    <div class="schedule" style="grid-template-columns: repeat(@Model.EmployeeSchedules.Count, minmax(220px, 1fr)); margin-top: 16px;">
+        @foreach (var schedule in Model.EmployeeSchedules)
+        {
+            <div class="column droppable" data-user="@schedule.Employee.Id" data-date="@Model.ReferenceDate.ToString("yyyy-MM-dd")">
+                <strong>@schedule.Employee.Name</strong>
+                <div class="muted">@schedule.Employee.RoleName</div>
+                <div class="droppable" data-user="@schedule.Employee.Id" data-date="@Model.ReferenceDate.ToString("yyyy-MM-dd")">
+                    @foreach (var task in schedule.Tasks)
+                    {
+                        <div class="task @(task.IsEmergency ? "emergency" : null)"
+                             draggable="true"
+                             data-task-id="@task.ServiceRequestId"
+                             title="@task.Tooltip">
+                            <div>@task.VendingMachineName</div>
+                            <div class="muted">@task.TimeRange</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="card" style="margin-top: 16px;">
+        <table>
+            <thead>
+            <tr>
+                <th>@(Model.IsEnglish ? "Employee" : "Сотрудник")</th>
+                @foreach (var day in Model.WeekDays)
+                {
+                    <th>@day.Title</th>
+                }
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var schedule in Model.WeekSchedules)
+            {
+                <tr>
+                    <td>
+                        <strong>@schedule.Employee.Name</strong>
+                        <div class="muted">@schedule.Employee.RoleName</div>
+                    </td>
+                    @foreach (var day in schedule.Days)
+                    {
+                        <td>
+                            <div class="droppable" data-user="@schedule.Employee.Id" data-date="@day.Date.ToString("yyyy-MM-dd")">
+                                @foreach (var task in day.Tasks)
+                                {
+                                    <div class="task @(task.IsEmergency ? "emergency" : null)"
+                                         draggable="true"
+                                         data-task-id="@task.ServiceRequestId"
+                                         title="@task.Tooltip">
+                                        <div>@task.VendingMachineName</div>
+                                        <div class="muted">@task.ShortInfo</div>
+                                    </div>
+                                }
+                            </div>
+                        </td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+<script>
+    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+    const token = tokenInput ? tokenInput.value : '';
+
+    function onDragStart(ev) {
+        ev.dataTransfer.setData('text/plain', ev.target.dataset.taskId);
+    }
+
+    function onDrop(ev) {
+        ev.preventDefault();
+        const taskId = ev.dataTransfer.getData('text/plain');
+        const target = ev.currentTarget;
+        const userId = target.dataset.user;
+        const date = target.dataset.date;
+
+        fetch('?handler=Move', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify({ serviceRequestId: Number(taskId), userId: Number(userId), date: date })
+        }).then(() => window.location.reload());
+    }
+
+    function onDragOver(ev) {
+        ev.preventDefault();
+    }
+
+    document.querySelectorAll('.task').forEach(el => {
+        el.addEventListener('dragstart', onDragStart);
+    });
+
+    document.querySelectorAll('.droppable').forEach(el => {
+        el.addEventListener('drop', onDrop);
+        el.addEventListener('dragover', onDragOver);
+    });
+</script>

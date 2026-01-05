@@ -1,0 +1,33 @@
+@page "/web/machines"
+@model VendingService.API.Pages.Web.MachinesModel
+
+<div class="card">
+    <h2>@WebText.UploadTitle</h2>
+    <p class="muted">
+        @(Model.IsEnglish ? "Supported formats: .csv, .xlsx. Required fields: Name, Manufacturer, Model, InventoryNumber, SerialNumber, Address, Place."
+            : "Поддерживаются форматы .csv, .xlsx. Обязательные поля: Название, Производитель, Модель, Инвентарный номер, Серийный номер, Адрес, Место.")
+    </p>
+
+    <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
+        <input type="file" name="Upload" accept=".csv,.xlsx"/>
+        <button type="submit" class="btn">@WebText.Upload</button>
+    </form>
+</div>
+
+@if (Model.Messages.Count > 0)
+{
+    <div class="success">@string.Join(" ", Model.Messages)</div>
+}
+
+@if (Model.Errors.Count > 0)
+{
+    <div class="warning">
+        <strong>@WebText.Errors:</strong>
+        <ul>
+            @foreach (var err in Model.Errors)
+            {
+                <li>@err</li>
+            }
+        </ul>
+    </div>
+}

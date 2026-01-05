@@ -1,0 +1,79 @@
+@page "/web/calendar"
+@model VendingService.API.Pages.Web.CalendarModel
+
+<div class="card">
+    <h2>@WebText.CalendarTitle</h2>
+    <form method="get">
+        <label>
+            @(Model.IsEnglish ? "View" : "Режим"):
+            <select name="ViewMode">
+                <option value="week" selected="@(Model.View == CalendarViewMode.Week)">@WebText.ViewWeek</option>
+                <option value="month" selected="@(Model.View == CalendarViewMode.Month)">@WebText.ViewMonth</option>
+                <option value="year" selected="@(Model.View == CalendarViewMode.Year)">@WebText.ViewYear</option>
+            </select>
+        </label>
+        <label style="margin-left: 12px;">
+            @(Model.IsEnglish ? "Scope" : "Отображение"):
+            <select name="Mode">
+                <option value="all" selected="@(Model.ModeValue == CalendarFilterMode.All)">@WebText.FilterAll</option>
+                <option value="single" selected="@(Model.ModeValue == CalendarFilterMode.Single)">@WebText.FilterSingle</option>
+            </select>
+        </label>
+        <label style="margin-left: 12px;">
+            @(Model.IsEnglish ? "Machine" : "Автомат"):
+            <select name="MachineId">
+                <option value="">@(Model.IsEnglish ? "Select" : "Выберите")</option>
+                @foreach (var machine in Model.Machines)
+                {
+                    <option value="@machine.Id" selected="@(machine.Id == Model.SelectedMachineId)">@machine.Name</option>
+                }
+            </select>
+        </label>
+        <label style="margin-left: 12px;">
+            @(Model.IsEnglish ? "Date" : "Дата"):
+            <input type="date" name="Date" value="@Model.ReferenceDate.ToString("yyyy-MM-dd")"/>
+        </label>
+        <button type="submit" class="btn" style="margin-left: 12px;">@WebText.Apply</button>
+    </form>
+</div>
+
+@if (Model.View == CalendarViewMode.Year)
+{
+    <div class="grid" style="grid-template-columns: repeat(3, 1fr); margin-top: 16px;">
+        @foreach (var month in Model.Months)
+        {
+            <div class="card">
+                <strong>@month.Title</strong>
+                <div class="calendar" style="margin-top: 8px;">
+                    @foreach (var day in month.Days)
+                    {
+                        <div class="day @(day.IsOutsideMonth ? "outside" : null)">
+                            <h4>@day.Date.Day</h4>
+                            @foreach (var item in day.Items.Take(2))
+                            {
+                                <div class="badge @item.ColorClass" title="@item.Tooltip">@item.ShortName</div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="card" style="margin-top: 16px;">
+        <div class="calendar">
+            @foreach (var day in Model.Days)
+            {
+                <div class="day @(day.IsOutsideMonth ? "outside" : null)">
+                    <h4>@day.Date.ToString("dd.MM")</h4>
+                    @foreach (var item in day.Items)
+                    {
+                        <div class="badge @item.ColorClass" title="@item.Tooltip">@item.ShortName</div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}

@@ -64,13 +64,14 @@ BEGIN TRY
     WHEN NOT MATCHED THEN
         INSERT (Name) VALUES (source.Name);
 
-    MERGE dbo.ServiceRequestStatus AS target
-    USING (VALUES
+MERGE dbo.ServiceRequestStatus AS target
+USING (VALUES
+        (N'Авария', 5),
         (N'Новая', 10),
         (N'В работе', 20),
         (N'Отменена', 30),
         (N'Закрыта', 40)
-    ) AS source (Name, SortOrder)
+) AS source (Name, SortOrder)
     ON target.Name = source.Name
     WHEN NOT MATCHED THEN
         INSERT (Name, SortOrder) VALUES (source.Name, source.SortOrder)

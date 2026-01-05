@@ -1,0 +1,64 @@
+@using System.Globalization
+@{
+    var culture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+}
+<!doctype html>
+<html lang="@culture">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>@WebText.Title</title>
+    <style>
+        body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #f3f4f6; color: #111; }
+        header { background: #1f2937; color: #fff; padding: 14px 20px; }
+        header .title { font-size: 18px; font-weight: 600; }
+        nav { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+        nav a { color: #e5e7eb; text-decoration: none; padding: 6px 10px; border-radius: 4px; }
+        nav a.active, nav a:hover { background: #374151; }
+        .lang { margin-left: auto; display: flex; gap: 8px; }
+        .lang a { padding: 4px 8px; border-radius: 4px; background: #111827; color: #fff; }
+        main { padding: 20px; }
+        .card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+        .muted { color: #6b7280; }
+        .btn { border: none; border-radius: 4px; padding: 8px 12px; background: #2563eb; color: #fff; cursor: pointer; }
+        .btn.secondary { background: #6b7280; }
+        .btn:disabled { background: #9ca3af; cursor: default; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+        th { background: #f9fafb; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; color: #111; }
+        .badge.green { background: #bbf7d0; }
+        .badge.yellow { background: #fde68a; }
+        .badge.red { background: #fecaca; }
+        .grid { display: grid; gap: 10px; }
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .day { min-height: 88px; border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px; background: #fff; }
+        .day.outside { background: #f9fafb; color: #9ca3af; }
+        .day h4 { margin: 0 0 6px; font-size: 12px; font-weight: 600; }
+        .schedule { display: grid; gap: 10px; }
+        .column { background: #fff; border-radius: 8px; padding: 10px; border: 1px solid #e5e7eb; min-height: 140px; }
+        .task { background: #e5e7eb; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; cursor: move; }
+        .task.emergency { background: #fecaca; }
+        .droppable { min-height: 100px; }
+        .warning { background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 8px 10px; border-radius: 6px; margin-bottom: 10px; }
+        .success { background: #dcfce7; border: 1px solid #16a34a; color: #166534; padding: 8px 10px; border-radius: 6px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="title">@WebText.Title</div>
+    <nav>
+        <a href="/Web/Machines?culture=@culture" class="@(Context.Request.Path.StartsWithSegments("/Web/Machines") ? "active" : null)">@WebText.MenuMachines</a>
+        <a href="/Web/Calendar?culture=@culture" class="@(Context.Request.Path.StartsWithSegments("/Web/Calendar") ? "active" : null)">@WebText.MenuCalendar</a>
+        <a href="/Web/WorkSchedule?culture=@culture" class="@(Context.Request.Path.StartsWithSegments("/Web/WorkSchedule") ? "active" : null)">@WebText.MenuSchedule</a>
+        <span class="lang">
+            <a href="?culture=ru">RU</a>
+            <a href="?culture=en">EN</a>
+        </span>
+    </nav>
+</header>
+<main>
+    @RenderBody()
+</main>
+</body>
+</html>

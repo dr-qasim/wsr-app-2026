@@ -25,11 +25,20 @@
         <DataTemplate DataType="{x:Type vm:MonitorViewModel}">
             <views:MonitorView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ReportsViewModel}">
+            <views:ReportsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:InventoryViewModel}">
+            <views:InventoryView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:UsersViewModel}">
             <views:UsersView/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ModemsViewModel}">
             <views:ModemsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AdditionalViewModel}">
+            <views:AdditionalView/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ProfileViewModel}">
             <views:ProfileView/>

@@ -48,6 +48,7 @@ public sealed class ShellViewModel : ObservableObject
         RoleName = state.RoleName ?? "Роль";
         UserInitials = BuildInitials(state.LastName, state.FirstName, state.Email);
         ToastService = services.ToastService;
+        _ = services.NotificationsClient.StartAsync();
 
         ToggleSidebarCommand = new RelayCommand(() => IsSidebarCollapsed = !IsSidebarCollapsed);
 
@@ -55,15 +56,16 @@ public sealed class ShellViewModel : ObservableObject
         NavigateVendingMachinesCommand = new RelayCommand(() => CurrentPage = new VendingMachinesViewModel());
         NavigateCompaniesCommand = new RelayCommand(() => CurrentPage = new CompaniesViewModel());
         NavigateMonitorCommand = new RelayCommand(() => CurrentPage = new MonitorViewModel());
-        NavigateReportsCommand = new RelayCommand(() => CurrentPage = new TextPageViewModel("Детальные отчеты", "Экран детальных отчетов добавим следующим шагом."));
-        NavigateInventoryCommand = new RelayCommand(() => CurrentPage = new TextPageViewModel("Учет ТМЦ", "Экран учета ТМЦ добавим следующим шагом."));
+        NavigateReportsCommand = new RelayCommand(() => CurrentPage = new ReportsViewModel());
+        NavigateInventoryCommand = new RelayCommand(() => CurrentPage = new InventoryViewModel());
         NavigateUsersCommand = new RelayCommand(() => CurrentPage = new UsersViewModel());
         NavigateModemsCommand = new RelayCommand(() => CurrentPage = new ModemsViewModel());
-        NavigateAdditionalCommand = new RelayCommand(() => CurrentPage = new TextPageViewModel("Дополнительные", "Экран дополнительных настроек добавим следующим шагом."));
+        NavigateAdditionalCommand = new RelayCommand(() => CurrentPage = new AdditionalViewModel());
         NavigateProfileCommand = new RelayCommand(() => CurrentPage = new ProfileViewModel(state));
 
         LogoutCommand = new AsyncRelayCommand(async () =>
         {
+            await services.NotificationsClient.StopAsync();
             await services.AuthService.LogoutAsync();
             var loginWindow = new Views.LoginWindow();
             loginWindow.Show();
