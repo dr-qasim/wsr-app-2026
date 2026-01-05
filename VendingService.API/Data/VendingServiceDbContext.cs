@@ -21,8 +21,13 @@ public sealed class VendingServiceDbContext(DbContextOptions<VendingServiceDbCon
     public DbSet<Provider> Providers => Set<Provider>();
     public DbSet<Sale> Sales => Set<Sale>();
     public DbSet<SalePaymentMethod> SalePaymentMethods => Set<SalePaymentMethod>();
+    public DbSet<ServiceRequest> ServiceRequests => Set<ServiceRequest>();
+    public DbSet<ServiceRequestStatus> ServiceRequestStatuses => Set<ServiceRequestStatus>();
+    public DbSet<ServiceRequestStatusHistory> ServiceRequestStatusHistories => Set<ServiceRequestStatusHistory>();
+    public DbSet<ServiceRequestType> ServiceRequestTypes => Set<ServiceRequestType>();
     public DbSet<ServicePriority> ServicePriorities => Set<ServicePriority>();
     public DbSet<TimeZoneEntry> TimeZones => Set<TimeZoneEntry>();
+    public DbSet<UserAccountVendingMachineModel> UserAccountVendingMachineModels => Set<UserAccountVendingMachineModel>();
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<VendingMachine> VendingMachines => Set<VendingMachine>();
@@ -33,6 +38,7 @@ public sealed class VendingServiceDbContext(DbContextOptions<VendingServiceDbCon
     public DbSet<VendingMachineProduct> VendingMachineProducts => Set<VendingMachineProduct>();
     public DbSet<VendingMachinePaymentSystem> VendingMachinePaymentSystems => Set<VendingMachinePaymentSystem>();
     public DbSet<VendingMachineStatus> VendingMachineStatuses => Set<VendingMachineStatus>();
+    public DbSet<VendingMachineStatusHistory> VendingMachineStatusHistories => Set<VendingMachineStatusHistory>();
     public DbSet<WorkMode> WorkModes => Set<WorkMode>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -56,6 +62,20 @@ public sealed class VendingServiceDbContext(DbContextOptions<VendingServiceDbCon
             entity.HasKey(x => x.UserRoleId);
             entity.Property(x => x.Name).HasMaxLength(50);
             entity.HasIndex(x => x.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<UserAccountVendingMachineModel>(entity =>
+        {
+            entity.ToTable("UserAccountVendingMachineModel");
+            entity.HasKey(x => new { x.UserAccountId, x.VendingMachineModelId });
+
+            entity.HasOne(x => x.UserAccount)
+                .WithMany()
+                .HasForeignKey(x => x.UserAccountId);
+
+            entity.HasOne(x => x.VendingMachineModel)
+                .WithMany()
+                .HasForeignKey(x => x.VendingMachineModelId);
         });
 
         modelBuilder.Entity<UserAccount>(entity =>
@@ -113,6 +133,64 @@ public sealed class VendingServiceDbContext(DbContextOptions<VendingServiceDbCon
             entity.HasKey(x => x.ServicePriorityId);
             entity.Property(x => x.Name).HasMaxLength(50);
             entity.HasIndex(x => x.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<ServiceRequestType>(entity =>
+        {
+            entity.ToTable("ServiceRequestType");
+            entity.HasKey(x => x.ServiceRequestTypeId);
+            entity.Property(x => x.Name).HasMaxLength(100);
+            entity.HasIndex(x => x.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<ServiceRequestStatus>(entity =>
+        {
+            entity.ToTable("ServiceRequestStatus");
+            entity.HasKey(x => x.ServiceRequestStatusId);
+            entity.Property(x => x.Name).HasMaxLength(50);
+            entity.HasIndex(x => x.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<ServiceRequest>(entity =>
+        {
+            entity.ToTable("ServiceRequest");
+            entity.HasKey(x => x.ServiceRequestId);
+            entity.Property(x => x.Notes).HasMaxLength(1000);
+            entity.Property(x => x.DeclineReason).HasMaxLength(500);
+
+            entity.HasOne(x => x.VendingMachine)
+                .WithMany()
+                .HasForeignKey(x => x.VendingMachineId);
+
+            entity.HasOne(x => x.ServiceRequestType)
+                .WithMany()
+                .HasForeignKey(x => x.ServiceRequestTypeId);
+
+            entity.HasOne(x => x.ServiceRequestStatus)
+                .WithMany()
+                .HasForeignKey(x => x.ServiceRequestStatusId);
+
+            entity.HasOne(x => x.AssignedUserAccount)
+                .WithMany()
+                .HasForeignKey(x => x.AssignedUserAccountId);
+        });
+
+        modelBuilder.Entity<ServiceRequestStatusHistory>(entity =>
+        {
+            entity.ToTable("ServiceRequestStatusHistory");
+            entity.HasKey(x => x.ServiceRequestStatusHistoryId);
+
+            entity.HasOne(x => x.ServiceRequest)
+                .WithMany()
+                .HasForeignKey(x => x.ServiceRequestId);
+
+            entity.HasOne(x => x.ServiceRequestStatus)
+                .WithMany()
+                .HasForeignKey(x => x.ServiceRequestStatusId);
+
+            entity.HasOne(x => x.ChangedByUserAccount)
+                .WithMany()
+                .HasForeignKey(x => x.ChangedByUserAccountId);
         });
 
         modelBuilder.Entity<VendingMachineStatus>(entity =>
@@ -413,6 +491,24 @@ public sealed class VendingServiceDbContext(DbContextOptions<VendingServiceDbCon
             entity.HasOne(x => x.EventType)
                 .WithMany()
                 .HasForeignKey(x => x.EventTypeId);
+        });
+
+        modelBuilder.Entity<VendingMachineStatusHistory>(entity =>
+        {
+            entity.ToTable("VendingMachineStatusHistory");
+            entity.HasKey(x => x.VendingMachineStatusHistoryId);
+
+            entity.HasOne(x => x.VendingMachine)
+                .WithMany()
+                .HasForeignKey(x => x.VendingMachineId);
+
+            entity.HasOne(x => x.VendingMachineStatus)
+                .WithMany()
+                .HasForeignKey(x => x.VendingMachineStatusId);
+
+            entity.HasOne(x => x.ChangedByUserAccount)
+                .WithMany()
+                .HasForeignKey(x => x.ChangedByUserAccountId);
         });
 
         modelBuilder.Entity<Maintenance>(entity =>

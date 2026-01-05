@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VendingService.API.Contracts.Lookups;
+using VendingService.API.Contracts.ServiceRequests;
 using VendingService.API.Data;
 
 namespace VendingService.API.Controllers;
@@ -121,5 +122,23 @@ public sealed class LookupsController(VendingServiceDbContext db) : ControllerBa
             manufacturers,
             models));
     }
-}
 
+    [HttpGet("service-requests")]
+    public async Task<ActionResult<ServiceRequestLookups>> GetServiceRequestLookups(CancellationToken cancellationToken)
+    {
+        var types = await db.ServiceRequestTypes
+            .AsNoTracking()
+            .OrderBy(x => x.Name)
+            .Select(x => new ServiceRequestLookupItem(x.ServiceRequestTypeId, x.Name))
+            .ToListAsync(cancellationToken);
+
+        var statuses = await db.ServiceRequestStatuses
+            .AsNoTracking()
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.Name)
+            .Select(x => new ServiceRequestLookupItem(x.ServiceRequestStatusId, x.Name))
+            .ToListAsync(cancellationToken);
+
+        return Ok(new ServiceRequestLookups(types, statuses));
+    }
+}

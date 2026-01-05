@@ -199,6 +199,85 @@ public sealed class UsersController(VendingServiceDbContext db, PasswordHasher p
         return NoContent();
     }
 
+    [HttpGet("{userAccountId:int}/models")]
+    public async Task<ActionResult<IReadOnlyList<UserModelItem>>> GetModels(int userAccountId, CancellationToken cancellationToken)
+    {
+        var exists = await db.UserAccounts.AnyAsync(x => x.UserAccountId == userAccountId, cancellationToken);
+        if (!exists)
+        {
+            return NotFound();
+        }
+
+        var items = await db.UserAccountVendingMachineModels
+            .AsNoTracking()
+            .Where(x => x.UserAccountId == userAccountId)
+            .Select(x => new UserModelItem(
+                x.VendingMachineModelId,
+                x.VendingMachineModel != null ? x.VendingMachineModel.Name : string.Empty,
+                x.VendingMachineModel != null ? x.VendingMachineModel.VendingMachineManufacturerId : 0,
+                x.VendingMachineModel != null && x.VendingMachineModel.VendingMachineManufacturer != null
+                    ? x.VendingMachineModel.VendingMachineManufacturer.Name
+                    : string.Empty))
+            .ToListAsync(cancellationToken);
+
+        return Ok(items);
+    }
+
+    [HttpPut("{userAccountId:int}/models")]
+    public async Task<IActionResult> UpdateModels(
+        int userAccountId,
+        [FromBody] UpdateUserModelsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var exists = await db.UserAccounts.AnyAsync(x => x.UserAccountId == userAccountId, cancellationToken);
+        if (!exists)
+        {
+            return NotFound();
+        }
+
+        var modelIds = request.VendingMachineModelIds
+            .Distinct()
+            .Where(x => x > 0)
+            .ToList();
+
+        var knownModelIds = await db.VendingMachineModels
+            .Where(x => modelIds.Contains(x.VendingMachineModelId))
+            .Select(x => x.VendingMachineModelId)
+            .ToListAsync(cancellationToken);
+
+        if (knownModelIds.Count != modelIds.Count)
+        {
+            return BadRequest(new { Message = "VendingMachineModelIds contains unknown ids." });
+        }
+
+        var existing = await db.UserAccountVendingMachineModels
+            .Where(x => x.UserAccountId == userAccountId)
+            .ToListAsync(cancellationToken);
+
+        var toRemove = existing.Where(x => !modelIds.Contains(x.VendingMachineModelId)).ToList();
+        var existingIds = existing.Select(x => x.VendingMachineModelId).ToHashSet();
+
+        foreach (var id in modelIds)
+        {
+            if (!existingIds.Contains(id))
+            {
+                db.UserAccountVendingMachineModels.Add(new UserAccountVendingMachineModel
+                {
+                    UserAccountId = userAccountId,
+                    VendingMachineModelId = id
+                });
+            }
+        }
+
+        if (toRemove.Count > 0)
+        {
+            db.UserAccountVendingMachineModels.RemoveRange(toRemove);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return NoContent();
+    }
+
     private static string BuildFullName(string lastName, string firstName, string? patronymic)
         => string.Join(" ", new[] { lastName, firstName, patronymic }.Where(x => !string.IsNullOrWhiteSpace(x)));
 
